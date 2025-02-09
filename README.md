@@ -1,6 +1,6 @@
 # omero-screen-plots
 
-Plotting Functions for Omero-Screen Immuno-fluorescence Data.
+Plotting Functions for Omero-Screen Immuno-Fluorescence Data.
 ## Status
 
 
@@ -78,19 +78,79 @@ stacked_barplot(
 ```
 <img src="./images/stacked_barplot.png" alt="stacked_barplot" width="300">
 
+### count_plot
+
+Provides either relative counts (default) using a given norm_control,
+or absolute counts based on an enum PlotType (NORMALISED or ABSOLUTE).
+Doesnt require EdU data. Stats are calculated and displayed when three
+or more plates are analysed.
+
+```python
+from omero_screen_plots.countplot import PlotType, count_plot
+count_plot(
+    df=df,
+    norm_control="ctr",
+    conditions=conditions,
+    condition_col="condition",
+    selector_col="cell_line",
+    selector_val="RPE1wt",
+    #plot_type = PlotType.NORMALISED, # this is the default!
+    title="test rel counts 3 repeats",
+    save=False,
+)
+
+count_plot(
+    df=df,
+    norm_control="ctr",
+    conditions=conditions,
+    condition_col="condition",
+    selector_col="cell_line",
+    selector_val="RPE1wt",
+    plot_type=PlotType.ABSOLUTE,
+    title="test abs counts 3 repeats",
+    save=False,
+)
+```
+<img src="./images/relcount.png" alt="relcount" width="300">
+<img src="./images/abscount.png" alt="abscount" width="300">
+
+### feature_plot
+
+Shows mixed boxenplot and swarmplot (showing 30 random points per plate, with different colors).
+On top medium points for each repeat are shown as larger circles. Stats are analysed and displayed
+when three or more plates are in the data set.
+
+
+```python
+from omero_screen_plots.featureplot import feature_plot
+feature_plot(
+    df=df,
+    feature="intensity_mean_yH2AX_nucleus",
+    conditions=conditions,
+    condition_col="condition",  # default
+    selector_col="cell_line",  # default
+    selector_val="RPE1wt",
+    title="p21",
+    save=False,
+    path=None,
+)
+```
+<img src="./images/feature_plot.png" alt="feature_plot" width="300">
+
+
 ## Installation
 
 ```bash
-# Clone the repository
+
+# Either clone the repo
 git clone https://github.com/Helfrid/omero-screen-plots.git
-# Change into the project directory
-cd omero-screen-plots
-# Create and activate virtual environment
-uv venv
-source .venv/bin/activate
-# Install the package
-uv pip install -e .
+# and pip install (or uv add)
+pip install "path to repo"
+# or directly pip install via github link
+pip install https://github.com/Helfrid/omero-screen-plots.git
 ```
+
+
 
 ## Project Structure
 ```text
@@ -137,3 +197,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 Thanks to the contributors of matplotlib, pandas, seaborn and scipy!
+
+## TODO
+
+Add tests and examples for synergy plots
+Add growthcurve plots
