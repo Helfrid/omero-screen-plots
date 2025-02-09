@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  version-bump:
+  release:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
@@ -38,7 +38,6 @@ jobs:
 
       - name: Validate commit message format
         run: |
-          # lint-disable: context-access
           if echo "${{ env.COMMIT_MSG }}" | grep -qE "^[a-z]+(\([^)]+\))?: "; then
             echo "Commit message follows conventional commit format."
           else
@@ -46,26 +45,29 @@ jobs:
             exit 1
           fi
 
-      - name: Determine package and bump version
+      - name: Attempt version bump (if applicable)
         run: |
-          # lint-disable: context-access
+          set -e
           COMMIT_MSG="${{ env.COMMIT_MSG }}"
-          # Check if a package scope is provided (e.g. "fix(package): ..." )
-          if echo "$COMMIT_MSG" | grep -q "^[a-z]\+(\([^)]\+\))"; then
+          PACKAGE=""
+          if echo "$COMMIT_MSG" | grep -qE "^[a-z]+\([^)]+\)"; then
             PACKAGE=$(echo "$COMMIT_MSG" | sed -n 's/^[a-z]\+(\([^)]\+\)).*/\1/p')
             if [ -d "packages/$PACKAGE" ]; then
               echo "Bumping version for package: $PACKAGE"
               cd "packages/$PACKAGE"
-              cz bump --yes || true
             else
-              echo "Package '$PACKAGE' not found. Bumping version for root package instead."
-              cz bump --yes || true
+              echo "Package '$PACKAGE' not found. Using root package."
             fi
           else
-            echo "No package scope found. Bumping version for root package."
-            cz bump --yes || true
+            echo "No package scope found. Using root package."
           fi
 
-      - name: Push changes
-        if: env.SHOULD_PUSH == 'true' && success()  # Only push if all previous steps succeeded
+          # Run version bump.
+          # If no bump is needed or if commitizen doesn’t modify files, that’s fine.
+          cz bump --yes || echo "No version bump occurred."
+
+          # If any changes were made, they’ll be staged/committed by commitizen.
+          # Otherwise, we simply continue.
+
+      - name: Push changes if commit message is valid
         run: git push --follow-tags
