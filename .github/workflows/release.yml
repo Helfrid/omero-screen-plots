@@ -45,7 +45,7 @@ jobs:
             exit 1
           fi
 
-      - name: Bump version if applicable
+      - name: Determine package and bump version
         run: |
           COMMIT_MSG="${{ env.COMMIT_MSG }}"
           # Check if a package scope is provided (e.g. "fix(package): ..." )
@@ -54,14 +54,14 @@ jobs:
             if [ -d "packages/$PACKAGE" ]; then
               echo "Bumping version for package: $PACKAGE"
               cd "packages/$PACKAGE"
-              cz bump --yes
+              cz bump --yes || true
             else
               echo "Package '$PACKAGE' not found. Bumping version for root package instead."
-              cz bump --yes
+              cz bump --yes || true
             fi
           else
             echo "No package scope found. Bumping version for root package."
-            cz bump --yes
+            cz bump --yes || true
           fi
 
       - name: Push changes
