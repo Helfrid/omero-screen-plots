@@ -34,27 +34,21 @@ jobs:
         run: pip install commitizen
 
       - name: Get commit message
-        run: |
-          echo "COMMIT_MSG=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
+        run: echo "COMMIT_MSG=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
 
-      - name: Check commit message format
-        id: check-commit
+      - name: Validate commit message format
         run: |
           if echo "${{ env.COMMIT_MSG }}" | grep -qE "^[a-z]+(\([^)]+\))?: "; then
-            echo "Commit message follows conventional format"
-            echo "SHOULD_PUSH=true" >> $GITHUB_ENV
+            echo "Commit message follows conventional commit format."
           else
-            echo "Commit message does not follow conventional format"
-            echo "SHOULD_PUSH=false" >> $GITHUB_ENV
+            echo "Commit message does not follow conventional commit format."
+            exit 1
           fi
 
-      - name: Determine package and bump version
-        if: env.SHOULD_PUSH == 'true'
+      - name: Bump version if applicable
         run: |
-          # Get the commit message
           COMMIT_MSG="${{ env.COMMIT_MSG }}"
-
-          # Extract package name using grep instead of bash regex
+          # Check if a package scope is provided (e.g. "fix(package): ..." )
           if echo "$COMMIT_MSG" | grep -q "^[a-z]\+(\([^)]\+\))"; then
             PACKAGE=$(echo "$COMMIT_MSG" | sed -n 's/^[a-z]\+(\([^)]\+\)).*/\1/p')
             if [ -d "packages/$PACKAGE" ]; then
@@ -62,14 +56,13 @@ jobs:
               cd "packages/$PACKAGE"
               cz bump --yes
             else
-              echo "Bumping version for root package"
+              echo "Package '$PACKAGE' not found. Bumping version for root package instead."
               cz bump --yes
             fi
           else
-            echo "No package scope found, bumping root package"
+            echo "No package scope found. Bumping version for root package."
             cz bump --yes
           fi
 
       - name: Push changes
-        if: env.SHOULD_PUSH == 'true'
         run: git push --follow-tags
