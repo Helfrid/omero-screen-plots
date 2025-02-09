@@ -12,7 +12,7 @@ Version: ![version](https://img.shields.io/badge/version-0.1.2-blue)
 
 ## Features
 Examples for each plot can be found in jupyter notebooks in tests/examples.
-check if this sentence makes it into github
+check if this sentence does not makes it into github
 ### combplot
 Cell Cycle analysis with one selected feature column
 platted as a scatterplot along the DAPI axis. (Requires EdU labelling data and cell cycle analysis in the csv file)

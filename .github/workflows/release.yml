@@ -67,5 +67,5 @@ jobs:
           fi
 
       - name: Push changes
-        if: success()  # Only push if all previous steps succeeded
+        if: env.SHOULD_PUSH == 'true' && success()  # Only push if all previous steps succeeded
         run: git push --follow-tags
