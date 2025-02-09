@@ -70,4 +70,5 @@ jobs:
           # Otherwise, we simply continue.
 
       - name: Push changes if commit message is valid
+        if: ${{ success() }}
         run: git push --follow-tags
