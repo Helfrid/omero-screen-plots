@@ -37,7 +37,19 @@ jobs:
         run: |
           echo "COMMIT_MSG=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
 
+      - name: Check commit message format
+        id: check-commit
+        run: |
+          if echo "${{ env.COMMIT_MSG }}" | grep -qE "^[a-z]+(\([^)]+\))?: "; then
+            echo "Commit message follows conventional format"
+            echo "SHOULD_PUSH=true" >> $GITHUB_ENV
+          else
+            echo "Commit message does not follow conventional format"
+            echo "SHOULD_PUSH=false" >> $GITHUB_ENV
+          fi
+
       - name: Determine package and bump version
+        if: env.SHOULD_PUSH == 'true'
         run: |
           # Get the commit message
           COMMIT_MSG="${{ env.COMMIT_MSG }}"
@@ -59,4 +71,5 @@ jobs:
           fi
 
       - name: Push changes
+        if: env.SHOULD_PUSH == 'true'
         run: git push --follow-tags
