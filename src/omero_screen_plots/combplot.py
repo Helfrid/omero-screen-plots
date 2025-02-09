@@ -274,5 +274,5 @@ def comb_plot(
             path,
             figure_title,
             tight_layout=False,
-            fig_extension="png",
+            fig_extension="png",  # the scatterplots can cause problems in illustrator when saved as vector compatible pdfs
         )
