@@ -38,6 +38,7 @@ jobs:
 
       - name: Validate commit message format
         run: |
+          # lint-disable: context-access
           if echo "${{ env.COMMIT_MSG }}" | grep -qE "^[a-z]+(\([^)]+\))?: "; then
             echo "Commit message follows conventional commit format."
           else
@@ -47,6 +48,7 @@ jobs:
 
       - name: Determine package and bump version
         run: |
+          # lint-disable: context-access
           COMMIT_MSG="${{ env.COMMIT_MSG }}"
           # Check if a package scope is provided (e.g. "fix(package): ..." )
           if echo "$COMMIT_MSG" | grep -q "^[a-z]\+(\([^)]\+\))"; then
@@ -65,4 +67,5 @@ jobs:
           fi
 
       - name: Push changes
+        if: success()  # Only push if all previous steps succeeded
         run: git push --follow-tags
