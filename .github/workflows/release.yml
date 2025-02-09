@@ -15,7 +15,8 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -36,39 +37,36 @@ jobs:
       - name: Get commit message
         run: echo "COMMIT_MSG=$(git log -1 --pretty=%B)" >> $GITHUB_ENV
 
-      - name: Validate commit message format
+      - name: Log commit message format check
         run: |
           if echo "${{ env.COMMIT_MSG }}" | grep -qE "^[a-z]+(\([^)]+\))?: "; then
-            echo "Commit message follows conventional commit format."
+            echo "Conventional commit detected – a version bump will be applied."
           else
-            echo "Commit message does not follow conventional commit format."
-            exit 1
+            echo "Non-conventional commit detected – no version bump will be applied."
           fi
 
       - name: Attempt version bump (if applicable)
         run: |
           set -e
           COMMIT_MSG="${{ env.COMMIT_MSG }}"
-          PACKAGE=""
-          if echo "$COMMIT_MSG" | grep -qE "^[a-z]+\([^)]+\)"; then
-            PACKAGE=$(echo "$COMMIT_MSG" | sed -n 's/^[a-z]\+(\([^)]\+\)).*/\1/p')
-            if [ -d "packages/$PACKAGE" ]; then
+          # Only perform a bump if the commit message is conventional.
+          if echo "$COMMIT_MSG" | grep -qE "^[a-z]+(\([^)]+\))?: "; then
+            PACKAGE=""
+            # Check for a package scope in the commit message (e.g., "fix(package): ...")
+            if echo "$COMMIT_MSG" | grep -qE "^[a-z]+\([^)]+\)"; then
+              PACKAGE=$(echo "$COMMIT_MSG" | sed -n 's/^[a-z]\+(\([^)]\+\)).*/\1/p')
+            fi
+            # Use the package if it exists, otherwise bump the root package.
+            if [ -n "$PACKAGE" ] && [ -d "packages/$PACKAGE" ]; then
               echo "Bumping version for package: $PACKAGE"
               cd "packages/$PACKAGE"
             else
-              echo "Package '$PACKAGE' not found. Using root package."
+              echo "No package scope found or package directory does not exist. Using root package."
             fi
+            cz bump --yes || echo "No version bump occurred."
           else
-            echo "No package scope found. Using root package."
+            echo "Skipping version bump because commit message is not conventional."
           fi
 
-          # Run version bump.
-          # If no bump is needed or if commitizen doesn’t modify files, that’s fine.
-          cz bump --yes || echo "No version bump occurred."
-
-          # If any changes were made, they’ll be staged/committed by commitizen.
-          # Otherwise, we simply continue.
-
-      - name: Push changes if commit message is valid
-        if: ${{ success() }}
+      - name: Push changes
         run: git push --follow-tags
