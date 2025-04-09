@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Optional
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib.axes import Axes
@@ -122,3 +123,16 @@ def select_datapoints(
                 df_sub = df_sub.sample(n=n, random_state=1)
                 df_sampled = pd.concat([df_sampled, df_sub])
     return df_sampled
+
+
+def scale_data(
+    df: pd.DataFrame,
+    scale_col: str,
+    scale_min: float = 1.0,
+    scale_max: float = 99.0,
+) -> pd.DataFrame:
+    p_low = np.percentile(df[scale_col], scale_min)
+    p_high = np.percentile(df[scale_col], scale_max)
+    df[scale_col] = np.clip(df[scale_col], p_low, p_high)
+    df[scale_col] = ((df[scale_col] - p_low) / (p_high - p_low)) * 65535
+    return df

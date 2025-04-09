@@ -9,6 +9,7 @@ import seaborn as sns
 from omero_screen_plots.stats import set_significance_marks
 from omero_screen_plots.utils import (
     save_fig,
+    scale_data,
     select_datapoints,
     selector_val_filter,
     show_repeat_points,
@@ -33,6 +34,7 @@ def feature_plot(
     selector_val: Optional[str] = "",
     title: Optional[str] = "",
     colors: list[str] = COLORS,
+    scale: bool = False,
     save: bool = True,
     path: Optional[Path] = None,
 ) -> None:
@@ -41,6 +43,8 @@ def feature_plot(
         df, selector_col, selector_val, condition_col, conditions
     )
     assert df_filtered is not None, "No data found"
+    if scale:
+        df_filtered = scale_data(df_filtered, feature)
 
     fig, ax = plt.subplots(figsize=(height, height))
     sns.boxenplot(
