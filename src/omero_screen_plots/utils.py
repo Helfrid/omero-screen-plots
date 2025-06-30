@@ -1,3 +1,5 @@
+"""Utility functions for OMERO screen plots."""
+
 from pathlib import Path
 from typing import Optional
 
@@ -19,12 +21,11 @@ def save_fig(
     fig: Figure,
     path: Path,
     fig_id: str,
-    tight_layout: bool = True,
+    tight_layout: bool = False,
     fig_extension: str = "pdf",
     resolution: int = 300,
 ) -> None:
-    """
-    Save a matplotlib figure to a file.
+    """Save a matplotlib figure to a file.
 
     Parameters
     ----------
@@ -41,12 +42,11 @@ def save_fig(
     resolution : int, optional
         The resolution of the saved figure in dpi (default is 300).
 
-    Returns
+    Returns:
     -------
     None
         Saves the figure in the specified format.
     """
-
     dest = path / f"{fig_id}.{fig_extension}"
     print("Saving figure", fig_id)
     if tight_layout:
@@ -67,7 +67,7 @@ def selector_val_filter(
     condition_col: Optional[str],
     conditions: Optional[list[str]],
 ) -> Optional[pd.DataFrame]:
-    """Check if selector_val is provided for selector_col and filter df"""
+    """Check if selector_val is provided for selector_col and filter df."""
     if condition_col and conditions:
         df = df[df[condition_col].isin(conditions)].copy()
     if selector_col and selector_val:
@@ -81,6 +81,7 @@ def selector_val_filter(
 def get_repeat_points(
     df: pd.DataFrame, condition_col: str, y_col: str
 ) -> pd.DataFrame:
+    """Get repeat points for the given condition and y column."""
     return df.groupby(["plate_id", condition_col])[y_col].count().reset_index()
 
 
@@ -91,8 +92,7 @@ def show_repeat_points(
     y_col: str,
     ax: Axes,
 ) -> None:
-    """Show repeat points"""
-
+    """Show repeat points."""
     sns.stripplot(
         data=df,
         x=condition_col,
@@ -112,7 +112,7 @@ def show_repeat_points(
 def select_datapoints(
     df: pd.DataFrame, conditions: list[str], condition_col: str, n: int = 30
 ) -> pd.DataFrame:
-    """Select 30 random datapoints per category and plate-id"""
+    """Select 30 random datapoints per category and plate-id."""
     df_sampled = pd.DataFrame()
     for condition in conditions:
         for plate_id in df.plate_id.unique():
@@ -131,8 +131,37 @@ def scale_data(
     scale_min: float = 1.0,
     scale_max: float = 99.0,
 ) -> pd.DataFrame:
+    """Scale data in the dataframe by the specified column."""
     p_low = np.percentile(df[scale_col], scale_min)
     p_high = np.percentile(df[scale_col], scale_max)
     df[scale_col] = np.clip(df[scale_col], p_low, p_high)
     df[scale_col] = ((df[scale_col] - p_low) / (p_high - p_low)) * 65535
     return df
+
+
+def grouped_x_positions(
+    n_conditions: int,
+    group_size: int = 2,
+    bar_width: float = 0.5,
+    within_group_spacing: float = 0.5,
+    between_group_gap: float = 1.0,
+) -> list[float]:
+    """Generate x-axis positions for grouped plots.
+
+    Parameters:
+    - n_conditions: number of conditions (bars/groups)
+    - group_size: number of conditions per group
+    - bar_width: width of each bar
+    - within_group_spacing: space between conditions in a group (distance between bar edges)
+    - between_group_gap: extra space between groups (distance between bar edges)
+    Returns a list of x positions for each condition (bar center).
+    """
+    x_positions: list[float] = []
+    pos: float = 0.0
+    for i in range(n_conditions):
+        x_positions.append(pos)
+        if (i + 1) % group_size == 0 and (i + 1) < n_conditions:
+            pos += bar_width + between_group_gap
+        else:
+            pos += bar_width + within_group_spacing
+    return x_positions
