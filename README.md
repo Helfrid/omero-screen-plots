@@ -11,7 +11,16 @@ Version: ![version](https://img.shields.io/badge/version-0.1.2-blue)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
 ## Features
-Examples for each plot can be found in jupyter notebooks in tests/examples.
+Examples for each plot can be found in jupyter notebooks in src/omero_screen_plots/examples.
+To run the notebooks sample data need to be downloaded from Zenodo (DOI `10.5281/zenodo.15728770`).
+
+```bash
+cd ./src/omero_screen_plots/examples/data
+wget https://zenodo.org/records/15728770/files/omero-screen-plots-sampledata.csv?download=1 -O sample_plate_data.csv
+cd ..
+```
+
+Or download via your browser and place it in a local `data/` folder.
 ### combplot
 Cell Cycle analysis with one selected feature column
 platted as a scatterplot along the DAPI axis. (Requires EdU labelling data and cell cycle analysis in the csv file)
